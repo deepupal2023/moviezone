@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MovieZone</title>
+<style>
+  /* Reset & base */
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+  body { background: linear-gradient(to right, #141e30, #243b55); color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* Header */
+  header { padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.4); backdrop-filter: blur(8px); border-bottom: 1px solid #444; border-radius: 0 0 15px 15px; }
+  header h1 { font-size: 2rem; letter-spacing: 2px; color: #ff6f91; text-shadow: 1px 1px 5px #000; }
+  nav button { margin-left: 1rem; padding: 0.5rem 1.2rem; border: none; cursor: pointer; border-radius: 10px; font-weight: bold; background: linear-gradient(45deg,#ff6f91,#ff9472); color: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: all 0.3s; }
+  nav button:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+
+  /* Main */
+  main { flex: 1; padding: 2rem; }
+  .filters { margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+  .filters select { padding: 0.5rem 1rem; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: #fff; font-weight: bold; transition: all 0.3s; }
+  .filters select:hover { background: rgba(255,255,255,0.2); }
+
+  /* Movie Cards */
+  .movies-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; }
+  .movie-card { background: rgba(255,255,255,0.05); border-radius: 15px; padding: 1rem; cursor: pointer; overflow: hidden; transition: all 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.5); position: relative; }
+  .movie-card:hover { transform: translateY(-8px); box-shadow: 0 15px 25px rgba(0,0,0,0.7); }
+  .movie-card img { width: 100%; border-radius: 15px; margin-bottom: 0.7rem; transition: transform 0.3s; }
+  .movie-card:hover img { transform: scale(1.05); }
+  .movie-card h3 { font-size: 1.1rem; margin-bottom: 0.3rem; color: #ffb347; }
+  .movie-card p { font-size: 0.85rem; color: #ccc; margin-bottom: 0.5rem; }
+  .watchlist-btn { padding: 0.4rem 0.7rem; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; background: #ff6f91; color: #fff; box-shadow: 2px 2px 10px rgba(0,0,0,0.3); transition: all 0.3s; position: absolute; bottom: 10px; right: 10px; }
+  .watchlist-btn:hover { background: #ff9472; transform: scale(1.05); }
+
+  /* Modal */
+  .modal { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; padding:2rem; z-index: 1000; }
+  .modal-content { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 2rem; border-radius: 20px; max-width: 600px; width: 100%; position: relative; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+  .modal-content img { width: 100%; border-radius: 15px; margin-bottom: 1rem; }
+  .modal-content h2 { margin-bottom: 0.5rem; color: #ffb347; }
+  .modal-content p { margin-bottom: 0.5rem; color: #ccc; }
+  .close-modal { position: absolute; top: 15px; right: 20px; cursor: pointer; font-size: 2rem; color: #ff6f91; transition: all 0.3s; }
+  .close-modal:hover { transform: rotate(90deg); }
+
+  /* Pagination */
+  .pagination { margin-top: 2rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; }
+  .pagination button { padding: 0.5rem 1rem; border: none; border-radius: 10px; cursor: pointer; background: #ff6f91; font-weight: bold; color: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: all 0.3s; }
+  .pagination button:hover { background: #ff9472; transform: translateY(-3px); }
+
+  /* Auth/Login */
+  .auth-container { display: none; flex-direction: column; justify-content: center; align-items: center; min-height: 80vh; background: rgba(0,0,0,0.7); position: fixed; top:0; left:0; width:100%; z-index: 1000; backdrop-filter: blur(8px); }
+  .auth-container.active { display: flex; }
+  .auth-box { background: rgba(255,255,255,0.05); padding: 2rem; border-radius: 20px; width: 320px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.7); }
+  .auth-box h2 { margin-bottom: 1rem; color: #ff6f91; }
+  .auth-box input { width: 100%; padding: 0.7rem; margin-bottom: 1rem; border-radius: 12px; border: none; background: rgba(255,255,255,0.1); color: #fff; font-weight: bold; }
+  .auth-box input::placeholder { color: #ccc; }
+  .auth-box button { width: 100%; padding: 0.7rem; background: linear-gradient(45deg,#ff6f91,#ff9472); border: none; color: #fff; font-weight: bold; border-radius: 12px; cursor: pointer; transition: all 0.3s; }
+  .auth-box button:hover { transform: translateY(-3px); }
+  .auth-toggle { margin-top: 0.5rem; cursor: pointer; color: #ffb347; font-weight: bold; }
+
+  /* Responsive */
+  @media(max-width: 600px) {
+    header { flex-direction: column; gap: 1rem; }
+    .filters { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MovieZone</h1>
+  <nav>
+    <button id="loginBtn">Login / Signup</button>
+    <button id="watchlistBtn">Watchlist</button>
+  </nav>
+</header>
+
+<main>
+  <div class="filters">
+    <select id="genreFilter">
+      <option value="all">All Genres</option>
+    </select>
+    <select id="sortFilter">
+      <option value="rating-desc">Rating High → Low</option>
+      <option value="rating-asc">Rating Low → High</option>
+    </select>
+  </div>
+  <div class="movies-grid" id="moviesGrid"></div>
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <span class="close-modal" id="closeModal">&times;</span>
+    <img id="modalImg" src="" alt="">
+    <h2 id="modalTitle"></h2>
+    <p id="modalGenre"></p>
+    <p id="modalRating"></p>
+    <p id="modalDesc"></p>
+    <button class="watchlist-btn" id="modalWatchlistBtn"></button>
+  </div>
+</div>
+
+<div class="auth-container" id="authContainer">
+  <div class="auth-box" id="authBox">
+    <h2 id="authTitle">Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button id="authSubmit">Submit</button>
+    <div class="auth-toggle" id="authToggle">Don't have an account? Signup</div>
+  </div>
+</div>
+
+<script>
+  // Sample Movies
+  const movies = [
+    {id:1,title:"Attack on Titan",genre:"Anime",rating:9.0,desc:"Humans fight titans.",img:"https://via.placeholder.com/300x400?text=Attack+on+Titan"},
+    {id:2,title:"Inception",genre:"Sci-Fi",rating:8.8,desc:"Dream within a dream.",img:"https://via.placeholder.com/300x400?text=Inception"},
+    {id:3,title:"Stranger Things",genre:"Series",rating:8.7,desc:"Mysterious events in Hawkins.",img:"https://via.placeholder.com/300x400?text=Stranger+Things"},
+    {id:4,title:"Naruto",genre:"Anime",rating:8.3,desc:"A young ninja's journey.",img:"https://via.placeholder.com/300x400?text=Naruto"},
+    {id:5,title:"The Dark Knight",genre:"Movie",rating:9.1,desc:"Batman faces Joker.",img:"https://via.placeholder.com/300x400?text=The+Dark+Knight"},
+    {id:6,title:"Your Name",genre:"Anime",rating:8.9,desc:"A magical body swap story.",img:"https://via.placeholder.com/300x400?text=Your+Name"},
+    {id:7,title:"Breaking Bad",genre:"Series",rating:9.5,desc:"Chemistry teacher turns criminal.",img:"https://via.placeholder.com/300x400?text=Breaking+Bad"},
+    {id:8,title:"Demon Slayer",genre:"Anime",rating:8.8,desc:"Fight demons and protect family.",img:"https://via.placeholder.com/300x400?text=Demon+Slayer"},
+    {id:9,title:"Interstellar",genre:"Sci-Fi",rating:8.6,desc:"Space travel to save humanity.",img:"https://via.placeholder.com/300x400?text=Interstellar"},
+    {id:10,title:"One Piece",genre:"Anime",rating:9.0,desc:"Pirate adventures.",img:"https://via.placeholder.com/300x400?text=One+Piece"},
+  ];
+
+  let currentPage = 1;
+  const itemsPerPage = 4;
+  let filteredMovies = [...movies];
+  let watchlist = JSON.parse(localStorage.getItem('watchlist') || '[]');
+
+  const moviesGrid = document.getElementById('moviesGrid');
+  const genreFilter = document.getElementById('genreFilter');
+  const sortFilter = document.getElementById('sortFilter');
+  const pagination = document.getElementById('pagination');
+  const modal = document.getElementById('modal');
+  const modalImg = document.getElementById('modalImg');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalGenre = document.getElementById('modalGenre');
+  const modalRating = document.getElementById('modalRating');
+  const modalDesc = document.getElementById('modalDesc');
+  const modalWatchlistBtn = document.getElementById('modalWatchlistBtn');
+  const closeModal = document.getElementById('closeModal');
+
+  const authContainer = document.getElementById('authContainer');
+  const loginBtn = document.getElementById('loginBtn');
+  const authToggle = document.getElementById('authToggle');
+  const authTitle = document.getElementById('authTitle');
+  const authSubmit = document.getElementById('authSubmit');
+  let isLogin = true;
+
+  const watchlistBtn = document.getElementById('watchlistBtn');
+
+  // Genres
+  const genres = [...new Set(movies.map(m=>m.genre))];
+  genres.forEach(g => {
+    const option = document.createElement('option');
+    option.value = g;
+    option.textContent = g;
+    genreFilter.appendChild(option);
+  });
+
+  function renderMovies() {
+    moviesGrid.innerHTML = '';
+    const start = (currentPage-1)*itemsPerPage;
+    const paginatedMovies = filteredMovies.slice(start, start+itemsPerPage);
+    paginatedMovies.forEach(movie => {
+      const div = document.createElement('div');
+      div.className = 'movie-card';
+      div.innerHTML = `
+        <img src="${movie.img}" alt="${movie.title}">
+        <h3>${movie.title}</h3>
+        <p>Genre: ${movie.genre}</p>
+        <p>Rating: ${movie.rating}</p>
+        <button class="watchlist-btn" onclick="toggleWatchlist(${movie.id}, event)">${watchlist.includes(movie.id)?'Remove':'Add'}</button>
+      `;
+      div.onclick = () => openModal(movie);
+      moviesGrid.appendChild(div);
+    });
+    renderPagination();
+  }
+
+  function renderPagination() {
+    pagination.innerHTML = '';
+    const pageCount = Math.ceil(filteredMovies.length / itemsPerPage);
+    for(let i=1;i<=pageCount;i++){
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.style.background = i===currentPage?'#00b894':'#ff6f91';
+      btn.onclick = ()=>{currentPage=i; renderMovies();}
+      pagination.appendChild(btn);
+    }
+  }
+
+  genreFilter.addEventListener('change', applyFilters);
+  sortFilter.addEventListener('change', applyFilters);
+
+  function applyFilters() {
+    const genre = genreFilter.value;
+    const sort = sortFilter.value;
+    filteredMovies = movies.filter(m=> genre==='all'?true:m.genre===genre);
+    filteredMovies.sort((a,b)=> sort==='rating-desc'?b.rating-a.rating:a.rating-b.rating);
+    currentPage = 1;
+    renderMovies();
+  }
+
+  function openModal(movie){
+    modal.style.display = 'flex';
+    modalImg.src = movie.img;
+    modalTitle.textContent = movie.title;
+    modalGenre.textContent = 'Genre: ' + movie.genre;
+    modalRating.textContent = 'Rating: ' + movie.rating;
+    modalDesc.textContent = movie.desc;
+    modalWatchlistBtn.textContent = watchlist.includes(movie.id)?'Remove from Watchlist':'Add to Watchlist';
+    modalWatchlistBtn.onclick = (e)=>{
+      e.stopPropagation();
+      toggleWatchlist(movie.id);
+      modalWatchlistBtn.textContent = watchlist.includes(movie.id)?'Remove from Watchlist':'Add to Watchlist';
+      renderMovies();
+    }
+  }
+
+  closeModal.onclick = ()=> modal.style.display = 'none';
+  window.onclick = e => {if(e.target===modal) modal.style.display='none';}
+
+  function toggleWatchlist(id, e){
+    if(e) e.stopPropagation();
+    if(watchlist.includes(id)) watchlist = watchlist.filter(w => w!==id);
+    else watchlist.push(id);
+    localStorage.setItem('watchlist', JSON.stringify(watchlist));
+    renderMovies();
+  }
+
+  watchlistBtn.onclick = ()=>{
+    filteredMovies = movies.filter(m=> watchlist.includes(m.id));
+    currentPage=1;
+    renderMovies();
+  }
+
+  loginBtn.onclick = ()=> authContainer.classList.toggle('active');
+  authToggle.onclick = ()=>{
+    isLogin = !isLogin;
+    authTitle.textContent = isLogin?'Login':'Signup';
+    authToggle.textContent = isLogin?"Don't have an account? Signup":"Already have an account? Login";
+  }
+  authSubmit.onclick = ()=>{
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    if(username && password){
+      alert(isLogin?'Logged in successfully':'Account created successfully');
+      authContainer.classList.remove('active');
+    } else {
+      alert('Please fill in all fields.');
+    }
+  }
+
+  renderMovies();
+</script>
+</body>
+</html>
